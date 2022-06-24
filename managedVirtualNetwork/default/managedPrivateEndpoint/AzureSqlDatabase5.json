@@ -1,0 +1,7 @@
+{
+	"name": "AzureSqlDatabase5",
+	"properties": {
+		"privateLinkResourceId": "/subscriptions/418f17b5-034f-4a30-8a05-b3b5bdf42529/resourceGroups/ven-men-z1-mi-dev-uks-01-rg/providers/Microsoft.Sql/servers/mentor-mi",
+		"groupId": "sqlServer"
+	}
+}
