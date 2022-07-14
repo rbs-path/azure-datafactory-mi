@@ -9,7 +9,7 @@
 		"type": "AzureSqlTable",
 		"schema": [],
 		"typeProperties": {
-			"schema": "mentor-mi",
+			"schema": "dbo",
 			"table": "GoogleAnalytics"
 		}
 	}
