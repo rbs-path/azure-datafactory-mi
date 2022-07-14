@@ -1,0 +1,23 @@
+{
+	"name": "AuthLog",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "mentordigital_mi_data",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AmazonS3Location",
+				"bucketName": "mentordigital-mi-data",
+				"folderPath": "data/2022-07-11/AuthLog",
+				"fileName": "7fcbeab5-db99-44bd-ad1f-0163646ce687.csv"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}
