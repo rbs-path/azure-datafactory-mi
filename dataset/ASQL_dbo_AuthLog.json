@@ -1,5 +1,5 @@
 {
-	"name": "ASQL_dbo_GoogleAnalytics_copy1",
+	"name": "ASQL_dbo_AuthLog",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "AzureSqlDatabase1",
