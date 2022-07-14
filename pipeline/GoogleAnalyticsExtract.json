@@ -51,7 +51,7 @@
 						"requestBody": "{\n  \"reportRequests\": [\n    {\n      \"viewId\": \"226439645\",\n      \"dateRanges\": [\n        {\"startDate\": \"2020-09-03\", \"endDate\": \"2020-09-03\"}\n      ],\n      \"metrics\": [\n        {\"expression\": \"ga:sessions\"}, {\"expression\": \"ga:sessionDuration\"},\n        {\"expression\": \"ga:bounces\"}, {\"expression\": \"ga:pageviews\"}\n      ],\n      \"dimensions\": [\n        {\"name\": \"ga:source\"}, {\"name\": \"ga:medium\"},\n        {\"name\": \"ga:hasSocialSourceReferral\"}, {\"name\": \"ga:adDistributionNetwork\"}\n      ]\n    }\n  ]\n}",
 						"additionalHeaders": {
 							"Authorization": {
-								"value": "Bearer @{activity('Get OAuth token').output.token}",
+								"value": "Bearer @{activity('Get OAuth token').output.Response}",
 								"type": "Expression"
 							},
 							"Content-Type": "application/json"
