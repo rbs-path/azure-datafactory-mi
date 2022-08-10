@@ -10,11 +10,7 @@
 		"typeProperties": {
 			"location": {
 				"type": "AmazonS3Location",
-				"bucketName": "mentordigital-mi-data",
-				"folderPath": {
-					"value": "@concat('data/', formatDateTime(utcnow(), 'yyyy-dd-MM'), '/Authlog/')",
-					"type": "Expression"
-				}
+				"bucketName": "mentordigital-mi-data"
 			},
 			"columnDelimiter": ",",
 			"escapeChar": "\\",

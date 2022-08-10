@@ -20,6 +20,8 @@
 						"storeSettings": {
 							"type": "AmazonS3ReadSettings",
 							"recursive": true,
+							"wildcardFolderPath": "@concat('data/', formatDateTime(utcnow(), 'yyyy-dd-MM'), '/Authlog/')",
+							"wildcardFileName": "*.csv",
 							"enablePartitionDiscovery": false
 						},
 						"formatSettings": {
