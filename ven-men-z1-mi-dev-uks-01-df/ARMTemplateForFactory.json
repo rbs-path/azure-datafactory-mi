@@ -55,7 +55,7 @@
 			"properties": {
 				"activities": [
 					{
-						"name": "Copy data1",
+						"name": "Copy AuthLog",
 						"type": "Copy",
 						"dependsOn": [],
 						"policy": {
@@ -71,7 +71,10 @@
 								"type": "DelimitedTextSource",
 								"storeSettings": {
 									"type": "AmazonS3ReadSettings",
-									"recursive": true,
+									"recursive": false,
+									"modifiedDatetimeStart": "2022-08-10T00:00:00.601Z",
+									"wildcardFolderPath": "data/2022-08-08/AuthLog",
+									"wildcardFileName": "48c9caa1-fb44-4feb-9c19-da232173fd67.csv",
 									"enablePartitionDiscovery": false
 								},
 								"formatSettings": {
@@ -88,6 +91,98 @@
 							"enableStaging": false,
 							"translator": {
 								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"type": "String",
+											"ordinal": 1
+										},
+										"sink": {
+											"name": "id",
+											"physicalType": "nvarchar"
+										}
+									},
+									{
+										"source": {
+											"type": "String",
+											"ordinal": 2
+										},
+										"sink": {
+											"name": "userId",
+											"physicalType": "nvarchar"
+										}
+									},
+									{
+										"source": {
+											"type": "String",
+											"ordinal": 3
+										},
+										"sink": {
+											"name": "username",
+											"physicalType": "nvarchar"
+										}
+									},
+									{
+										"source": {
+											"type": "String",
+											"ordinal": 4
+										},
+										"sink": {
+											"name": "tenant",
+											"physicalType": "nvarchar"
+										}
+									},
+									{
+										"source": {
+											"type": "String",
+											"ordinal": 5
+										},
+										"sink": {
+											"name": "clientId",
+											"physicalType": "nvarchar"
+										}
+									},
+									{
+										"source": {
+											"type": "String",
+											"ordinal": 6
+										},
+										"sink": {
+											"name": "data",
+											"physicalType": "nvarchar"
+										}
+									},
+									{
+										"source": {
+											"type": "String",
+											"ordinal": 7
+										},
+										"sink": {
+											"name": "actionType",
+											"physicalType": "nvarchar"
+										}
+									},
+									{
+										"source": {
+											"type": "String",
+											"ordinal": 8
+										},
+										"sink": {
+											"name": "createdAt",
+											"physicalType": "nvarchar"
+										}
+									},
+									{
+										"source": {
+											"type": "String",
+											"ordinal": 9
+										},
+										"sink": {
+											"name": "performedBy",
+											"physicalType": "nvarchar"
+										}
+									}
+								],
 								"typeConversion": true,
 								"typeConversionSettings": {
 									"allowDataTruncation": true,
@@ -97,7 +192,7 @@
 						},
 						"inputs": [
 							{
-								"referenceName": "AuthLog",
+								"referenceName": "S3_mi_data",
 								"type": "DatasetReference",
 								"parameters": {}
 							}
@@ -118,7 +213,7 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/AuthLog')]",
+				"[concat(variables('factoryId'), '/datasets/S3_mi_data')]",
 				"[concat(variables('factoryId'), '/datasets/ASQL_dbo_AuthLog')]"
 			]
 		},
@@ -454,7 +549,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/AuthLog')]",
+			"name": "[concat(parameters('factoryName'), '/S3_mi_data')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -467,9 +562,7 @@
 				"typeProperties": {
 					"location": {
 						"type": "AmazonS3Location",
-						"bucketName": "mentordigital-mi-data",
-						"folderPath": "data/2022-07-11/AuthLog",
-						"fileName": "7fcbeab5-db99-44bd-ad1f-0163646ce687.csv"
+						"bucketName": "mentordigital-mi-data"
 					},
 					"columnDelimiter": ",",
 					"escapeChar": "\\",

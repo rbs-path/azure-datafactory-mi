@@ -88,14 +88,14 @@
 					"MyAzureFunctionApp_properties_typeProperties_functionAppUrl": {
 						"value": "[parameters('MyAzureFunctionApp_properties_typeProperties_functionAppUrl')]"
 					},
+					"mentordigital_mi_data_properties_typeProperties_accessKeyId": {
+						"value": "[parameters('mentordigital_mi_data_properties_typeProperties_accessKeyId')]"
+					},
 					"AzureSqlDatabase5_properties_privateLinkResourceId": {
 						"value": "[parameters('AzureSqlDatabase5_properties_privateLinkResourceId')]"
 					},
 					"AzureSqlDatabase5_properties_groupId": {
 						"value": "[parameters('AzureSqlDatabase5_properties_groupId')]"
-					},
-					"mentordigital_mi_data_properties_typeProperties_accessKeyId": {
-						"value": "[parameters('mentordigital_mi_data_properties_typeProperties_accessKeyId')]"
 					}
 				}
 			},
