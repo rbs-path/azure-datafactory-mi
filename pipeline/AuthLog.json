@@ -19,8 +19,8 @@
 						"type": "DelimitedTextSource",
 						"storeSettings": {
 							"type": "AmazonS3ReadSettings",
-							"recursive": true,
-							"wildcardFolderPath": "@concat('data/', formatDateTime(utcnow(), 'yyyy-dd-MM'), '/Authlog/')",
+							"recursive": false,
+							"wildcardFolderPath": "@concat('data/', '2022-08-08', '/Authlog/')",
 							"wildcardFileName": "*.csv",
 							"enablePartitionDiscovery": false
 						},
@@ -38,6 +38,71 @@
 					"enableStaging": false,
 					"translator": {
 						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"sink": {
+									"name": "Prop_0",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"sink": {
+									"name": "Prop_1",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"sink": {
+									"name": "Prop_2",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"sink": {
+									"name": "Prop_3",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"sink": {
+									"name": "Prop_4",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"sink": {
+									"name": "Prop_5",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"sink": {
+									"name": "Prop_6",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"sink": {
+									"name": "Prop_7",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"sink": {
+									"name": "Prop_8",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							}
+						],
 						"typeConversion": true,
 						"typeConversionSettings": {
 							"allowDataTruncation": true,
@@ -47,7 +112,7 @@
 				},
 				"inputs": [
 					{
-						"referenceName": "AuthLog",
+						"referenceName": "S3_mi_data",
 						"type": "DatasetReference"
 					}
 				],

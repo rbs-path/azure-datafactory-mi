@@ -1,5 +1,5 @@
 {
-	"name": "AuthLog",
+	"name": "S3_mi_data",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "mentordigital_mi_data",
