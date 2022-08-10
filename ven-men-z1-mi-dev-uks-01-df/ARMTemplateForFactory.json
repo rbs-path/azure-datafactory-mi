@@ -1,0 +1,688 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "ven-men-z1-mi-dev-uks-01-df"
+		},
+		"AzureSqlDatabase1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureSqlDatabase1'"
+		},
+		"MyAzureFunctionApp_functionKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'functionKey' of 'MyAzureFunctionApp'"
+		},
+		"mentordigital_mi_data_secretAccessKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'secretAccessKey' of 'mentordigital_mi_data'"
+		},
+		"AzureKeyVault_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://mentor-central.vault.azure.net/"
+		},
+		"GoogleAnalytics_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://analyticsreporting.googleapis.com"
+		},
+		"MyAzureFunctionApp_properties_typeProperties_functionAppUrl": {
+			"type": "string",
+			"defaultValue": "https://get-token-app.azurewebsites.net"
+		},
+		"mentordigital_mi_data_properties_typeProperties_accessKeyId": {
+			"type": "string",
+			"defaultValue": "AKIAVVOLRKAUV2XF24XZ"
+		},
+		"AzureSqlDatabase5_properties_privateLinkResourceId": {
+			"type": "string",
+			"defaultValue": "/subscriptions/418f17b5-034f-4a30-8a05-b3b5bdf42529/resourceGroups/ven-men-z1-mi-dev-uks-01-rg/providers/Microsoft.Sql/servers/mentor-mi"
+		},
+		"AzureSqlDatabase5_properties_groupId": {
+			"type": "string",
+			"defaultValue": "sqlServer"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/AuthLog')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy data1",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AmazonS3ReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"tableOption": "autoCreate",
+								"disableMetricsCollection": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "AuthLog",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ASQL_dbo_AuthLog",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/AuthLog')]",
+				"[concat(variables('factoryId'), '/datasets/ASQL_dbo_AuthLog')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/GoogleAnalyticsExtract')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get OAuth token",
+						"type": "AzureFunctionActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"functionName": "get-token",
+							"method": "GET",
+							"headers": {}
+						},
+						"linkedServiceName": {
+							"referenceName": "MyAzureFunctionApp",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Copy GA data",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Get OAuth token",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "RestSource",
+								"httpRequestTimeout": "00:01:40",
+								"requestInterval": "00.00:00:00.010",
+								"requestMethod": "POST",
+								"requestBody": "{\n  \"reportRequests\": [\n    {\n      \"viewId\": \"175473394\",\n      \"dateRanges\": [\n        {\"startDate\": \"2022-05-01\", \"endDate\": \"2022-05-31\"}\n      ],\n      \"metrics\": [\n        {\"expression\": \"ga:sessions\"}, {\"expression\": \"ga:sessionDuration\"},\n        {\"expression\": \"ga:bounces\"}, {\"expression\": \"ga:pageviews\"}\n      ],\n      \"dimensions\": [\n        {\"name\": \"ga:source\"}, {\"name\": \"ga:medium\"},\n        {\"name\": \"ga:hasSocialSourceReferral\"}, {\"name\": \"ga:adDistributionNetwork\"}\n      ]\n    }\n  ]\n}",
+								"additionalHeaders": {
+									"Authorization": {
+										"value": "Bearer @{activity('Get OAuth token').output.Response}",
+										"type": "Expression"
+									},
+									"Content-Type": "application/json"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"tableOption": "autoCreate",
+								"disableMetricsCollection": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"value": "@json(variables('CopyDataMapping'))",
+								"type": "Expression"
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "REST_GoogleAnalyticsReports",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ASQL_dbo_GoogleAnalytics",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"variables": {
+					"CopyDataMapping": {
+						"type": "String",
+						"defaultValue": "{ \t\"type\": \"TabularTranslator\", \t\"mappings\": [ \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['dimensions'][0]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Dimension0\", \t\t\t\t\"type\": \"String\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['dimensions'][1]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Dimension1\", \t\t\t\t\"type\": \"String\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['dimensions'][2]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Dimension2\", \t\t\t\t\"type\": \"String\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['dimensions'][3]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Dimension3\", \t\t\t\t\"type\": \"String\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['dimensions'][4]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Dimension4\", \t\t\t\t\"type\": \"String\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['dimensions'][5]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Dimension5\", \t\t\t\t\"type\": \"String\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['dimensions'][6]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Dimension6\", \t\t\t\t\"type\": \"String\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['dimensions'][7]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Dimension7\", \t\t\t\t\"type\": \"String\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['dimensions'][8]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Dimension8\", \t\t\t\t\"type\": \"String\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['metrics'][0]['values'][0]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Metric0\", \t\t\t\t\"type\": \"Decimal\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['metrics'][0]['values'][1]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Metric1\", \t\t\t\t\"type\": \"Decimal\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['metrics'][0]['values'][2]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Metric2\", \t\t\t\t\"type\": \"Decimal\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['metrics'][0]['values'][3]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Metric3\", \t\t\t\t\"type\": \"Decimal\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['metrics'][0]['values'][4]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Metric4\", \t\t\t\t\"type\": \"Decimal\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['metrics'][0]['values'][5]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Metric5\", \t\t\t\t\"type\": \"Decimal\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['metrics'][0]['values'][6]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Metric6\", \t\t\t\t\"type\": \"Decimal\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['metrics'][0]['values'][7]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Metric7\", \t\t\t\t\"type\": \"Decimal\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['metrics'][0]['values'][8]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Metric8\", \t\t\t\t\"type\": \"Decimal\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['metrics'][0]['values'][9]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Metric9\", \t\t\t\t\"type\": \"Decimal\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"$['reports'][0]['nextPageToken']\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"NextPageToken\", \t\t\t\t\"type\": \"Int\" \t\t\t} \t\t} \t], \t\"collectionReference\": \"$['reports'][0]['data']['rows']\" }"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/MyAzureFunctionApp')]",
+				"[concat(variables('factoryId'), '/datasets/REST_GoogleAnalyticsReports')]",
+				"[concat(variables('factoryId'), '/datasets/ASQL_dbo_GoogleAnalytics')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/GoogleAnalyticsExtractPaged')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get OAuth token",
+						"type": "AzureFunctionActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"functionName": "GetOAuthToken",
+							"method": "GET",
+							"headers": {}
+						},
+						"linkedServiceName": {
+							"referenceName": "MyAzureFunctionApp",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Until no more pages",
+						"type": "Until",
+						"dependsOn": [
+							{
+								"activity": "Get OAuth token",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@equals(variables('NextPageToken'),'-1')",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Copy GA data",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "RestSource",
+											"httpRequestTimeout": "00:01:40",
+											"requestInterval": "00.00:00:00.010",
+											"requestMethod": "POST",
+											"requestBody": {
+												"value": "{\n  \"reportRequests\": [\n    {\n      \"viewId\": \"226439645\",\n      \"dateRanges\": [\n        {\"startDate\": \"2020-09-03\", \"endDate\": \"2020-09-03\"}\n      ],\n      \"metrics\": [\n        {\"expression\": \"ga:sessions\"}, {\"expression\": \"ga:sessionDuration\"},\n        {\"expression\": \"ga:bounces\"}, {\"expression\": \"ga:pageviews\"}\n      ],\n      \"dimensions\": [\n        {\"name\": \"ga:source\"}, {\"name\": \"ga:medium\"},\n        {\"name\": \"ga:hasSocialSourceReferral\"}, {\"name\": \"ga:adDistributionNetwork\"}\n      ],\n      \"pageSize\":4\n      @{if(equals(variables('NextPageToken'),'-1'),'',concat(',\"pageToken\":\"',variables('NextPageToken'),'\"'))}\n    }\n  ]\n}",
+												"type": "Expression"
+											},
+											"additionalHeaders": {
+												"Authorization": {
+													"value": "Bearer @{activity('Get OAuth token').output.token}",
+													"type": "Expression"
+												},
+												"Content-Type": "application/json"
+											}
+										},
+										"sink": {
+											"type": "AzureSqlSink"
+										},
+										"enableStaging": false,
+										"translator": {
+											"value": "@json(variables('CopyDataMapping'))",
+											"type": "Expression"
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "REST_GoogleAnalyticsReports",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "ASQL_dbo_GoogleAnalytics",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									]
+								},
+								{
+									"name": "Get NextPageToken",
+									"type": "Lookup",
+									"dependsOn": [
+										{
+											"activity": "Copy GA data",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"sqlReaderQuery": "SELECT COALESCE(MAX(NextPageToken), -1)  AS NextPageToken\nFROM dbo.GoogleAnalytics\n\nUPDATE dbo.GoogleAnalytics SET NextPageToken = NULL",
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"dataset": {
+											"referenceName": "ASQL_dbo_GoogleAnalytics",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									}
+								},
+								{
+									"name": "Set NextPageToken",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Get NextPageToken",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "NextPageToken",
+										"value": {
+											"value": "@string(activity('Get NextPageToken').output.firstRow.NextPageToken)",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"timeout": "7.00:00:00"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"variables": {
+					"CopyDataMapping": {
+						"type": "String",
+						"defaultValue": "{ \t\"type\": \"TabularTranslator\", \t\"mappings\": [ \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['dimensions'][0]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Dimension0\", \t\t\t\t\"type\": \"String\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['dimensions'][1]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Dimension1\", \t\t\t\t\"type\": \"String\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['dimensions'][2]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Dimension2\", \t\t\t\t\"type\": \"String\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['dimensions'][3]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Dimension3\", \t\t\t\t\"type\": \"String\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['dimensions'][4]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Dimension4\", \t\t\t\t\"type\": \"String\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['dimensions'][5]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Dimension5\", \t\t\t\t\"type\": \"String\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['dimensions'][6]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Dimension6\", \t\t\t\t\"type\": \"String\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['dimensions'][7]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Dimension7\", \t\t\t\t\"type\": \"String\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['dimensions'][8]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Dimension8\", \t\t\t\t\"type\": \"String\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['metrics'][0]['values'][0]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Metric0\", \t\t\t\t\"type\": \"Decimal\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['metrics'][0]['values'][1]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Metric1\", \t\t\t\t\"type\": \"Decimal\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['metrics'][0]['values'][2]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Metric2\", \t\t\t\t\"type\": \"Decimal\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['metrics'][0]['values'][3]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Metric3\", \t\t\t\t\"type\": \"Decimal\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['metrics'][0]['values'][4]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Metric4\", \t\t\t\t\"type\": \"Decimal\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['metrics'][0]['values'][5]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Metric5\", \t\t\t\t\"type\": \"Decimal\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['metrics'][0]['values'][6]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Metric6\", \t\t\t\t\"type\": \"Decimal\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['metrics'][0]['values'][7]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Metric7\", \t\t\t\t\"type\": \"Decimal\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['metrics'][0]['values'][8]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Metric8\", \t\t\t\t\"type\": \"Decimal\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"['metrics'][0]['values'][9]\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"Metric9\", \t\t\t\t\"type\": \"Decimal\" \t\t\t} \t\t}, \t\t{ \t\t\t\"source\": { \t\t\t\t\"path\": \"$['reports'][0]['nextPageToken']\" \t\t\t}, \t\t\t\"sink\": { \t\t\t\t\"name\": \"NextPageToken\", \t\t\t\t\"type\": \"Int\" \t\t\t} \t\t} \t], \t\"collectionReference\": \"$['reports'][0]['data']['rows']\" }"
+					},
+					"NextPageToken": {
+						"type": "String",
+						"defaultValue": "-1"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/MyAzureFunctionApp')]",
+				"[concat(variables('factoryId'), '/datasets/REST_GoogleAnalyticsReports')]",
+				"[concat(variables('factoryId'), '/datasets/ASQL_dbo_GoogleAnalytics')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ASQL_dbo_AuthLog')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "AuthLog"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ASQL_dbo_GoogleAnalytics')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "GoogleAnalytics"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AuthLog')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "mentordigital_mi_data",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AmazonS3Location",
+						"bucketName": "mentordigital-mi-data",
+						"folderPath": "data/2022-07-11/AuthLog",
+						"fileName": "7fcbeab5-db99-44bd-ad1f-0163646ce687.csv"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/mentordigital_mi_data')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/REST_GoogleAnalyticsReports')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "GoogleAnalytics",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "RestResource",
+				"typeProperties": {
+					"relativeUrl": "/v4/reports:batchGet"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/GoogleAnalytics')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureKeyVault')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('AzureKeyVault_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlDatabase1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('AzureSqlDatabase1_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "integrationRuntime1",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/integrationRuntime1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/GoogleAnalytics')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "RestService",
+				"typeProperties": {
+					"url": "[parameters('GoogleAnalytics_properties_typeProperties_url')]",
+					"enableServerCertificateValidation": false,
+					"authenticationType": "Anonymous"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/MyAzureFunctionApp')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureFunction",
+				"typeProperties": {
+					"functionAppUrl": "[parameters('MyAzureFunctionApp_properties_typeProperties_functionAppUrl')]",
+					"functionKey": {
+						"type": "SecureString",
+						"value": "[parameters('MyAzureFunctionApp_functionKey')]"
+					},
+					"authentication": "Anonymous"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/mentordigital_mi_data')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AmazonS3",
+				"typeProperties": {
+					"serviceUrl": "https://s3.amazonaws.com",
+					"accessKeyId": "[parameters('mentordigital_mi_data_properties_typeProperties_accessKeyId')]",
+					"secretAccessKey": {
+						"type": "SecureString",
+						"value": "[parameters('mentordigital_mi_data_secretAccessKey')]"
+					},
+					"authenticationType": "AccessKey"
+				},
+				"connectVia": {
+					"referenceName": "integrationRuntime1",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/integrationRuntime1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Weekly monday')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "AuthLog",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Week",
+						"interval": 1,
+						"startTime": "2022-08-10T13:01:00Z",
+						"timeZone": "UTC",
+						"schedule": {
+							"minutes": [
+								0
+							],
+							"hours": [
+								9
+							],
+							"weekDays": [
+								"Monday"
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/AuthLog')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/integrationRuntime1')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "Managed",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "UK South",
+						"dataFlowProperties": {
+							"computeType": "General",
+							"coreCount": 8,
+							"timeToLive": 10,
+							"cleanup": false
+						},
+						"copyComputeScaleProperties": {
+							"dataIntegrationUnit": 4,
+							"timeToLive": 5
+						},
+						"pipelineExternalComputeScaleProperties": {
+							"timeToLive": 60
+						}
+					}
+				},
+				"managedVirtualNetwork": {
+					"type": "ManagedVirtualNetworkReference",
+					"referenceName": "default"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/managedVirtualNetworks/default')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/default')]",
+			"type": "Microsoft.DataFactory/factories/managedVirtualNetworks",
+			"apiVersion": "2018-06-01",
+			"properties": {},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/default/AzureSqlDatabase5')]",
+			"type": "Microsoft.DataFactory/factories/managedVirtualNetworks/managedPrivateEndpoints",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"privateLinkResourceId": "[parameters('AzureSqlDatabase5_properties_privateLinkResourceId')]",
+				"groupId": "[parameters('AzureSqlDatabase5_properties_groupId')]"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/managedVirtualNetworks/default')]"
+			]
+		}
+	]
+}

@@ -1,0 +1,42 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "ven-men-z1-mi-dev-uks-01-df"
+		},
+		"AzureSqlDatabase1_connectionString": {
+			"value": ""
+		},
+		"MyAzureFunctionApp_functionKey": {
+			"value": ""
+		},
+		"mentordigital_mi_data_secretAccessKey": {
+			"value": ""
+		},
+		"AzureKeyVault_properties_typeProperties_baseUrl": {
+			"value": "https://mentor-central.vault.azure.net/"
+		},
+		"GoogleAnalytics_properties_typeProperties_url": {
+			"value": "https://analyticsreporting.googleapis.com"
+		},
+		"MyAzureFunctionApp_properties_typeProperties_functionAppUrl": {
+			"value": "https://get-token-app.azurewebsites.net"
+		},
+		"mentordigital_mi_data_properties_typeProperties_accessKeyId": {
+			"value": "AKIAVVOLRKAUV2XF24XZ"
+		},
+		"AzureSqlDatabase5_properties_privateLinkResourceId": {
+			"value": "/subscriptions/418f17b5-034f-4a30-8a05-b3b5bdf42529/resourceGroups/ven-men-z1-mi-dev-uks-01-rg/providers/Microsoft.Sql/servers/mentor-mi"
+		},
+		"AzureSqlDatabase5_properties_groupId": {
+			"value": "sqlServer"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}

@@ -1,0 +1,105 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "ven-men-z1-mi-dev-uks-01-df"
+		},
+		"AzureSqlDatabase1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureSqlDatabase1'"
+		},
+		"MyAzureFunctionApp_functionKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'functionKey' of 'MyAzureFunctionApp'"
+		},
+		"mentordigital_mi_data_secretAccessKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'secretAccessKey' of 'mentordigital_mi_data'"
+		},
+		"AzureKeyVault_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://mentor-central.vault.azure.net/"
+		},
+		"GoogleAnalytics_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://analyticsreporting.googleapis.com"
+		},
+		"MyAzureFunctionApp_properties_typeProperties_functionAppUrl": {
+			"type": "string",
+			"defaultValue": "https://get-token-app.azurewebsites.net"
+		},
+		"mentordigital_mi_data_properties_typeProperties_accessKeyId": {
+			"type": "string",
+			"defaultValue": "AKIAVVOLRKAUV2XF24XZ"
+		},
+		"AzureSqlDatabase5_properties_privateLinkResourceId": {
+			"type": "string",
+			"defaultValue": "/subscriptions/418f17b5-034f-4a30-8a05-b3b5bdf42529/resourceGroups/ven-men-z1-mi-dev-uks-01-rg/providers/Microsoft.Sql/servers/mentor-mi"
+		},
+		"AzureSqlDatabase5_properties_groupId": {
+			"type": "string",
+			"defaultValue": "sqlServer"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "ven-men-z1-mi-dev-uks-01-df_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"MyAzureFunctionApp_functionKey": {
+						"value": "[parameters('MyAzureFunctionApp_functionKey')]"
+					},
+					"AzureSqlDatabase1_connectionString": {
+						"value": "[parameters('AzureSqlDatabase1_connectionString')]"
+					},
+					"mentordigital_mi_data_secretAccessKey": {
+						"value": "[parameters('mentordigital_mi_data_secretAccessKey')]"
+					},
+					"AzureKeyVault_properties_typeProperties_baseUrl": {
+						"value": "[parameters('AzureKeyVault_properties_typeProperties_baseUrl')]"
+					},
+					"GoogleAnalytics_properties_typeProperties_url": {
+						"value": "[parameters('GoogleAnalytics_properties_typeProperties_url')]"
+					},
+					"MyAzureFunctionApp_properties_typeProperties_functionAppUrl": {
+						"value": "[parameters('MyAzureFunctionApp_properties_typeProperties_functionAppUrl')]"
+					},
+					"AzureSqlDatabase5_properties_privateLinkResourceId": {
+						"value": "[parameters('AzureSqlDatabase5_properties_privateLinkResourceId')]"
+					},
+					"AzureSqlDatabase5_properties_groupId": {
+						"value": "[parameters('AzureSqlDatabase5_properties_groupId')]"
+					},
+					"mentordigital_mi_data_properties_typeProperties_accessKeyId": {
+						"value": "[parameters('mentordigital_mi_data_properties_typeProperties_accessKeyId')]"
+					}
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}
