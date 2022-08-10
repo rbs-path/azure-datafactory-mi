@@ -303,8 +303,8 @@
 									"type": "AmazonS3ReadSettings",
 									"recursive": false,
 									"modifiedDatetimeStart": "2022-08-10T00:00:00.601Z",
-									"wildcardFolderPath": "data/2022-08-08/AuthLog",
-									"wildcardFileName": "48c9caa1-fb44-4feb-9c19-da232173fd67.csv",
+									"wildcardFolderPath": "@concat('data/', formatDateTime(utcnow(), 'yyyy-dd-MM'), '/Authlog')",
+									"wildcardFileName": "*",
 									"enablePartitionDiscovery": false
 								},
 								"formatSettings": {
